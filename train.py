@@ -52,9 +52,9 @@ class DogCatClassifier:
         """Fit the model using the data in the selected directory"""
         train_set, val_set, test_set = self._gen_data()
 
-        # callback object to save weights during the training
+        # callback object to save weights during the training  "weights-{epoch:03d}.ckpt"
         cp_callback = tf.keras.callbacks.ModelCheckpoint(
-            filepath=os.path.join(SAVE_DIR, "weights-{epoch:03d}.ckpt"),
+            filepath=os.path.join(SAVE_DIR, "weights-{epoch:03d}.weights.h5"),
             save_weights_only=True,
             verbose=1,
         )
@@ -147,7 +147,7 @@ class DogCatClassifier:
         model.compile(
             loss="binary_crossentropy",  # Loss function for binary classification
             optimizer=RMSprop(
-                lr=1e-3
+                learning_rate=1e-3
             ),  # Optimizer function to update weights during the training
             metrics=["accuracy", "AUC"],
         )  # Metrics to monitor during training and testing
