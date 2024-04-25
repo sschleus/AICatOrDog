@@ -1,3 +1,5 @@
+import os
+os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
 import sys
 from PyQt5.QtWidgets import (
     QMainWindow,
@@ -19,7 +21,7 @@ from Conv_operation import Transformations
 import pandas as pd
 from tensorflow import keras
 import shutil
-import os
+
 
 
 class MyWindow(QMainWindow):
@@ -290,7 +292,7 @@ class ModelWindow(QDialog):
     def ok_pressed(self, selected):
         print(selected, "selected")
         try:
-            self.model = keras.models.load_model("model_" + selected)
+            self.model = keras.models.load_model("model_" + selected + "/model_" + selected + ".h5")
             self.name = selected
         except:
             print("Cannot load model")
