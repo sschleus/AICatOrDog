@@ -265,6 +265,7 @@ class ModelWindow(QDialog):
             for name in os.listdir(".")
             if os.path.isdir(name) and name.startswith("model_")
         ]
+
         if len(dir) > 0:
             list.addItems(["_".join(name.split("_")[1:]) for name in dir])
         else:
@@ -292,7 +293,7 @@ class ModelWindow(QDialog):
     def ok_pressed(self, selected):
         print(selected, "selected")
         try:
-            self.model = keras.models.load_model("model_" + selected + "/model_" + selected + ".h5")
+            self.model = keras.models.load_model("model_" + selected + "/model_" + selected + ".keras")
             self.name = selected
         except:
             print("Cannot load model")
