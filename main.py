@@ -1,6 +1,7 @@
 import os
 os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
 import sys
+from PIL import Image
 from PyQt5.QtWidgets import (
     QMainWindow,
     QWidget,
@@ -47,21 +48,20 @@ class PredictTab(QWidget):
         mainLayout = QVBoxLayout(self)
 
         self.imgLabel = QLabel()
-        self.imgLabel.setStyleSheet(
-            "background-color: lightgrey; border: 1px solid gray;"
-        )
+        self.imgLabel.setStyleSheet("background-color: lightgrey; border: 1px solid gray;")
         self.imgLabel.setAlignment(QtCore.Qt.AlignCenter)
 
         self.prevButton = QPushButton("<")
-        self.prevButton.setMaximumWidth(50)
+        self.prevButton.setMaximumWidth(40)
         self.prevButton.setEnabled(False)
         self.nextButton = QPushButton(">")
-        self.nextButton.setMaximumWidth(50)
+        self.nextButton.setMaximumWidth(40)
         self.nextButton.setEnabled(False)
         self.predLabel = QLabel("None")
         self.predLabel.setAlignment(QtCore.Qt.AlignCenter)
         self.predLabel.setFixedWidth(300)
         self.predLabel.setFixedHeight(20)
+
         hWidget1 = QWidget(self)
         hWidget1.setFixedHeight(20)
         hLayout1 = QHBoxLayout(hWidget1)
@@ -78,6 +78,10 @@ class PredictTab(QWidget):
         hWidget4.setFixedHeight(25)
         hLayout4 = QHBoxLayout(hWidget4)
         hLayout4.setContentsMargins(0, 0, 0, 0)
+        hWidget5 = QWidget(self)
+        hWidget5.setFixedHeight(25)
+        hLayout5 = QHBoxLayout(hWidget5)
+        hLayout5.setContentsMargins(0, 0, 0, 0)
         # hWidget.setStyleSheet("border: 1px solid red; padding: 0 0 0 0; margin: 0px;")
 
         loadButton = QPushButton("Select picture(s)")
@@ -86,6 +90,8 @@ class PredictTab(QWidget):
         exportButton = QPushButton("Export")
         convolveButton = QPushButton("Apply test convolution")
         kernelButton = QPushButton("Choose test kernel")
+        feedbackButton = QPushButton("Upload to database")
+
         loadButton.clicked.connect(self.loadImg)
         self.prevButton.clicked.connect(self.prevImg)
         self.nextButton.clicked.connect(self.nextImg)
@@ -94,6 +100,7 @@ class PredictTab(QWidget):
         exportButton.clicked.connect(self.export)
         kernelButton.clicked.connect(lambda: self.choose_kernel(kernelButton))
         convolveButton.clicked.connect(self.convolve)
+        feedbackButton.clicked.connect(lambda: self.label_feedback(feedbackButton))
 
         mainLayout.addWidget(self.imgLabel)
         hLayout1.addWidget(self.prevButton)
@@ -105,10 +112,12 @@ class PredictTab(QWidget):
         hLayout3.addWidget(exportButton)
         hLayout4.addWidget(convolveButton)
         hLayout4.addWidget(kernelButton)
+        hLayout5.addWidget(feedbackButton)
         mainLayout.addWidget(hWidget1)
         mainLayout.addWidget(hWidget2)
         mainLayout.addWidget(hWidget3)
         mainLayout.addWidget(hWidget4)
+        mainLayout.addWidget(hWidget5)
 
     def loadImg(self):
         dialog = QFileDialog()
@@ -220,6 +229,37 @@ class PredictTab(QWidget):
             self.kernel_name = win.getKernel()
             self.n_layers = int(win.getNlayers())
             btn.setText(f"Select kernel ({self.kernel_name})")
+    
+    def label_feedback(self, btn):
+        win = FeedBackWindow()
+        if win.exec_():
+            txt = self.upload_database(win.get_selected_label())
+            btn.setText(f"{txt}")
+    
+    def upload_database(self, label):
+        if len(self.imgPath) > 0:
+            img = io.imread(self.imgPath[self.imgIndex])
+            directory = "data"
+            name = self.get_name_picture(label, directory)
+            save_path = os.path.join(directory, name)
+
+            img_pil = Image.fromarray(img)
+            img_pil.save(save_path)
+
+
+            return "Image uploaded"
+        return "No image found"
+    
+    def get_name_picture(self, label, directory):
+        number = 1
+        name = label + "." + str(number) + ".jpg"
+        file_path = os.path.join(directory, name)
+        while(os.path.isfile(file_path)):
+            number += 1
+            name = label + "." + str(number) + ".jpg"
+            file_path = os.path.join(directory, name)
+        return name
+        
 
     def convolve(self):
         if self.kernel_name == None:
@@ -240,6 +280,57 @@ class PredictTab(QWidget):
                 self.predLabel.setText(
                     f"{self.kernel_name} convolution with {self.n_layers} layers and maxpooling"
                 )
+
+class FeedBackWindow(QDialog):
+    def __init__(self):
+        super(FeedBackWindow, self).__init__()
+        self.setWindowTitle("Upload feedback")
+        self.label = None
+        mainLayout = QVBoxLayout(self)
+        hWidget = QWidget()
+        hLayout = QHBoxLayout(hWidget)
+        text = QLabel("Label the picture")
+        list = QListWidget()
+
+        dir = ["cat","dog"]
+        if len(dir) > 0:
+            list.addItems([name for name in dir])
+        else:
+            self.checkCount(list)
+
+        mainLayout.addWidget(text)
+        mainLayout.addWidget(list)
+
+
+        self.select = QPushButton("Select")
+        self.select.clicked.connect(lambda: self.ok_pressed(list.currentItem().text()))
+        cancel = QPushButton("Cancel")
+        cancel.clicked.connect(self.cancel_pressed)
+
+        hLayout.addWidget(self.select)
+        hLayout.addWidget(cancel)
+        hLayout.setContentsMargins(0, 0, 0, 0)
+        mainLayout.addWidget(hWidget)
+
+        self.setLayout(mainLayout)
+    
+    def checkCount(self, list):
+        if list.count() == 0:
+            list.addItems(["No label selected"])
+            list.setEnabled(False)
+            self.select.setEnabled(False)
+            self.delete.setEnabled(False)
+    
+    def cancel_pressed(self):
+        self.reject()
+    
+    def ok_pressed(self, selectedLabel):
+        self.label = selectedLabel
+        self.accept()
+    
+    def get_selected_label(self):
+        return self.label
+    
 
 
 class ModelWindow(QDialog):
@@ -281,13 +372,14 @@ class ModelWindow(QDialog):
         hLayout.setContentsMargins(0, 0, 0, 0)
         mainLayout.addWidget(hWidget)
         self.setLayout(mainLayout)
-
+    
     def checkCount(self, list):
         if list.count() == 0:
             list.addItems(["No models found"])
             list.setEnabled(False)
             self.select.setEnabled(False)
             self.delete.setEnabled(False)
+
 
     def getModel(self):
         return (self.name, self.model)
