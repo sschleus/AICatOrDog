@@ -4,17 +4,18 @@ from tensorflow.keras.layers import (
     MaxPooling2D,
     Flatten,
     Dropout,
+    BatchNormalization,
+    Input
 )
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.optimizers import RMSprop
 
-class Model:
 
+class Model:
 
     def __init__(self, height, width):
         self.height = height
         self.width = width
-
 
     def create_baseCNNModel(self):
         """Build a CNN model for image classification"""
@@ -65,6 +66,44 @@ class Model:
             ),  # Optimizer function to update weights during the training
             metrics=["accuracy", "AUC"],
         )  # Metrics to monitor during training and testing
+
+        # Print model summary
+        model.summary()
+
+        return model
+
+    def create_enhancedCNNModel(self):
+        model = Sequential()
+        model.add(Input(shape=(self.height, self.width, 3)))
+        model.add(Conv2D(32, (3, 3), activation='relu'))
+        model.add(BatchNormalization())
+        model.add(MaxPooling2D(pool_size=(2, 2)))
+        model.add(Dropout(0.25))
+
+        model.add(Conv2D(64, (3, 3), activation='relu'))
+        model.add(BatchNormalization())
+        model.add(MaxPooling2D(pool_size=(2, 2)))
+        model.add(Dropout(0.25))
+
+        model.add(Conv2D(128, (3, 3), activation='relu'))
+        model.add(BatchNormalization())
+        model.add(MaxPooling2D(pool_size=(2, 2)))
+        model.add(Dropout(0.25))
+
+        model.add(Conv2D(256, (3, 3), activation='relu'))
+        model.add(BatchNormalization())
+        model.add(MaxPooling2D(pool_size=(2, 2)))
+        model.add(Dropout(0.25))
+
+        model.add(Flatten())
+        model.add(Dense(512, activation='relu'))
+        model.add(BatchNormalization())
+        model.add(Dropout(0.25))
+        model.add(Dense(1, activation='sigmoid'))
+
+        model.compile(loss='binary_crossentropy',
+                      optimizer='adam',
+                      metrics=['accuracy'])
 
         # Print model summary
         model.summary()

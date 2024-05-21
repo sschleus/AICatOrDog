@@ -27,7 +27,7 @@ import shutil
 class MyWindow(QMainWindow):
     def __init__(self):
         super(MyWindow, self).__init__()
-        self.setWindowTitle("Dog & Cat classifier")
+        self.setWindowTitle("dogs & cats classifier")
         self.setFixedSize(600, 500)
         centralwidget = QWidget(self)
         PredictTab(centralwidget)
@@ -137,13 +137,15 @@ class PredictTab(QWidget):
         self.imgLabel.setPixmap(QtGui.QPixmap(path).scaled(500, 500))
         # self.imgLabel.setScaledContents(True)
         self.predLabel.setText(str(self.predictions[self.imgIndex]))
+
+        print("Prediction:", pred)
         if pred < 0.5:
             self.predLabel.setText(
-                f"I think it's a Cat! Confidence: {(1.0-pred)*100:.0f}%"
+                f"I think it's a cat! Confidence: {(1.0-pred)*100:.0f}%"
             )
         elif pred > 0.5 and pred != 1000:
             self.predLabel.setText(
-                f"I think it's a Dog! Confidence: {pred*100:.0f}%"
+                f"I think it's a dog! Confidence: {pred*100:.0f}%"
             )
         else:
             self.predLabel.setText("I don't know yet ")
@@ -293,7 +295,7 @@ class ModelWindow(QDialog):
     def ok_pressed(self, selected):
         print(selected, "selected")
         try:
-            self.model = keras.models.load_model("model_" + selected + "/model_" + selected + ".keras")
+            self.model = keras.models.load_model("model_" + selected + "/trained_model.keras")
             self.name = selected
         except:
             print("Cannot load model")
