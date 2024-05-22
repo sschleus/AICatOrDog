@@ -7,7 +7,6 @@ from tensorflow.keras.layers import (
     BatchNormalization,
     Input
 )
-import tensorflow as tf
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.optimizers import RMSprop
 
@@ -74,35 +73,39 @@ class Model:
         return model
 
     def create_enhancedCNNModel(self):
-        self.model = tf.keras.Sequential()
-        self.model.add(tf.keras.layers.InputLayer(input_shape=(self.img_h, self.img_w, 3)))
+        model = Sequential()
+        model.add(Input(shape=(self.height, self.width, 3)))
+        model.add(Conv2D(32, (3, 3), activation='relu'))
+        model.add(BatchNormalization())
+        model.add(MaxPooling2D(pool_size=(2, 2)))
+        model.add(Dropout(0.25))
 
-        self._build_convultional_layers()  # Add Convultional Layer
-        self.model.add(tf.keras.layers.Flatten())  # Flatten
-        self._fully_connect_network()  # Connect neurons between layers
+        model.add(Conv2D(64, (3, 3), activation='relu'))
+        model.add(BatchNormalization())
+        model.add(MaxPooling2D(pool_size=(2, 2)))
+        model.add(Dropout(0.25))
 
-        self.model.compile(optimizer=tf.keras.optimizers.Adam(), loss='binary_crossentropy', metrics=['accuracy'])
+        model.add(Conv2D(128, (3, 3), activation='relu'))
+        model.add(BatchNormalization())
+        model.add(MaxPooling2D(pool_size=(2, 2)))
+        model.add(Dropout(0.25))
 
-        return self.model
+        model.add(Conv2D(256, (3, 3), activation='relu'))
+        model.add(BatchNormalization())
+        model.add(MaxPooling2D(pool_size=(2, 2)))
+        model.add(Dropout(0.25))
 
-    def _fully_connect_network(self):
-        self._add_dense_block(512)
-        self.model.add(tf.keras.layers.Dense(units=1, activation='sigmoid'))
+        model.add(Flatten())
+        model.add(Dense(512, activation='relu'))
+        model.add(BatchNormalization())
+        model.add(Dropout(0.25))
+        model.add(Dense(1, activation='sigmoid'))
 
-    def _build_convultional_layers(self):
-        filters = 32
-        kernel_size = (3, 3)
-        for _ in range(4):
-            self._add_conv_block(filters, kernel_size)
-            filters = 2 * filters
+        model.compile(loss='binary_crossentropy',
+                      optimizer='adam',
+                      metrics=['accuracy'])
 
-    def _add_conv_block(self, filters, kernel_size):
-        self.model.add(
-            tf.keras.layers.Conv2D(filters=filters, kernel_size=kernel_size, activation='relu', padding="same"))
-        self.model.add(tf.keras.layers.BatchNormalization())
-        self.model.add(tf.keras.layers.MaxPooling2D(pool_size=(2, 2)))
+        # Print model summary
+        model.summary()
 
-    def _add_dense_block(self, units):
-        self.model.add(tf.keras.layers.Dense(units=units, activation='relu'))
-        self.model.add(tf.keras.layers.BatchNormalization())
-        self.model.add(tf.keras.layers.Dropout(rate=0.2))
+        return model

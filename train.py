@@ -17,7 +17,7 @@ def get_args():
     if not save_dir.exists():
         save_dir.mkdir(parents=True, exist_ok=True)
 
-    if Path(f"model_{args.folder}/trained_model.keras").is_dir():
+    if Path(f"model_{args.folder}/model_{args.folder}.keras").is_dir():
         print(f"Folder model_{args.folder} already exists. Do you want to overwrite?")
         y = input('Type "Yes" or "No": ')
         if y != "Yes":

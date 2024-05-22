@@ -17,12 +17,17 @@ from PyQt5.QtWidgets import (
     QListWidget,
     QDialog,
 )
+from PyQt5.QtChart import QChart, QChartView, QPieSeries, QPieSlice
+from PyQt5.QtGui import QPainter
+
 from PyQt5 import QtCore, QtGui
 from skimage import io, transform
 from Conv_operation import Transformations
 import pandas as pd
 from tensorflow import keras
 import shutil
+import matplotlib.pyplot as plt
+
 
 
 class MyWindow(QMainWindow):
@@ -33,6 +38,34 @@ class MyWindow(QMainWindow):
         centralwidget = QWidget(self)
         PredictTab(centralwidget)
         self.setCentralWidget(centralwidget)
+
+
+class ResultsWindow(QDialog):
+    def __init__(self, cat_percentage, dog_percentage, parent=None):
+        super(ResultsWindow, self).__init__(parent)
+        self.setWindowTitle("Prediction Results")
+        self.setFixedSize(400, 400)
+        layout = QVBoxLayout()
+
+        series = QPieSeries()
+        series.append(f"Cats", cat_percentage)
+        series.append(f"Dogs", dog_percentage)
+
+        # Set labels to display percentages
+        for slice in series.slices():
+            label = f"{slice.label()}: {slice.percentage() * 100:.1f}%"
+            slice.setLabel(label)
+
+        chart = QChart()
+        chart.addSeries(series)
+        chart.setTitle("Prediction Results")
+
+        chartView = QChartView(chart)
+        chartView.setRenderHint(QPainter.Antialiasing)
+
+        layout.addWidget(chartView)
+        self.setLayout(layout)
+
 
 
 class PredictTab(QWidget):
@@ -91,6 +124,7 @@ class PredictTab(QWidget):
         convolveButton = QPushButton("Apply test convolution")
         kernelButton = QPushButton("Choose test kernel")
         feedbackButton = QPushButton("Upload to database")
+        batchPredictButton = QPushButton("Start Testset")
 
         loadButton.clicked.connect(self.loadImg)
         self.prevButton.clicked.connect(self.prevImg)
@@ -101,6 +135,7 @@ class PredictTab(QWidget):
         kernelButton.clicked.connect(lambda: self.choose_kernel(kernelButton))
         convolveButton.clicked.connect(self.convolve)
         feedbackButton.clicked.connect(lambda: self.label_feedback(feedbackButton))
+        batchPredictButton.clicked.connect(self.batchPredict)
 
         mainLayout.addWidget(self.imgLabel)
         hLayout1.addWidget(self.prevButton)
@@ -118,6 +153,7 @@ class PredictTab(QWidget):
         mainLayout.addWidget(hWidget3)
         mainLayout.addWidget(hWidget4)
         mainLayout.addWidget(hWidget5)
+        mainLayout.addWidget(batchPredictButton)
 
     def loadImg(self):
         dialog = QFileDialog()
@@ -141,6 +177,51 @@ class PredictTab(QWidget):
             self.updatePixmap(self.imgPath[self.imgIndex])
             # if self.cnn is not None:
             # self.predict()
+
+    def batchPredict(self):
+        if self.cnn is None:
+            QMessageBox(
+                QMessageBox.Warning,
+                "Error",
+                "Please select a neural network model before making prediction",
+            ).exec_()
+            return
+
+        cat_dir = 'testset/cats/'
+        dog_dir = 'testset/dogs/'
+
+        cat_images = [os.path.join(cat_dir, f) for f in os.listdir(cat_dir)[:100]]
+        dog_images = [os.path.join(dog_dir, f) for f in os.listdir(dog_dir)[:100]]
+
+        cat_predictions = []
+        dog_predictions = []
+
+        for img_path in cat_images:
+            img = transform.resize(io.imread(img_path), (256, 256), anti_aliasing=True)
+            img = img.reshape(1, 256, 256, 3)
+            pred = self.cnn.predict(img, 1)[0][0]
+            cat_predictions.append(pred)
+
+        for img_path in dog_images:
+            img = transform.resize(io.imread(img_path), (256, 256), anti_aliasing=True)
+            img = img.reshape(1, 256, 256, 3)
+            pred = self.cnn.predict(img, 1)[0][0]
+            dog_predictions.append(pred)
+
+        cat_detected = sum(1 for p in cat_predictions if p < 0.5)
+        dog_detected = sum(1 for p in dog_predictions if p >= 0.5)
+
+        total_cats = len(cat_predictions)
+        total_dogs = len(dog_predictions)
+
+        cat_percentage = (cat_detected / total_cats) * 100
+        dog_percentage = (dog_detected / total_dogs) * 100
+
+        self.showResults(cat_percentage, dog_percentage)
+
+    def showResults(self, cat_percentage, dog_percentage):
+        self.resultsWindow = ResultsWindow(cat_percentage, dog_percentage)
+        self.resultsWindow.exec_()
 
     def updatePixmap(self, path, pred=1000):
         self.imgLabel.setPixmap(QtGui.QPixmap(path).scaled(500, 500))
