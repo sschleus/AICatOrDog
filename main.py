@@ -1,4 +1,5 @@
 import os
+
 os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
 import sys
 from PIL import Image
@@ -22,7 +23,6 @@ from Conv_operation import Transformations
 import pandas as pd
 from tensorflow import keras
 import shutil
-
 
 
 class MyWindow(QMainWindow):
@@ -150,11 +150,11 @@ class PredictTab(QWidget):
         print("Prediction:", pred)
         if pred < 0.5:
             self.predLabel.setText(
-                f"I think it's a cat! Confidence: {(1.0-pred)*100:.0f}%"
+                f"I think it's a cat! Confidence: {(1.0 - pred) * 100:.0f}%"
             )
         elif pred > 0.5 and pred != 1000:
             self.predLabel.setText(
-                f"I think it's a dog! Confidence: {pred*100:.0f}%"
+                f"I think it's a dog! Confidence: {pred * 100:.0f}%"
             )
         else:
             self.predLabel.setText("I don't know yet ")
@@ -229,37 +229,35 @@ class PredictTab(QWidget):
             self.kernel_name = win.getKernel()
             self.n_layers = int(win.getNlayers())
             btn.setText(f"Select kernel ({self.kernel_name})")
-    
+
     def label_feedback(self, btn):
         win = FeedBackWindow()
         if win.exec_():
             txt = self.upload_database(win.get_selected_label())
             btn.setText(f"{txt}")
-    
+
     def upload_database(self, label):
         if len(self.imgPath) > 0:
             img = io.imread(self.imgPath[self.imgIndex])
-            directory = "data"
+            directory = "data/" + label + "s"
             name = self.get_name_picture(label, directory)
             save_path = os.path.join(directory, name)
 
             img_pil = Image.fromarray(img)
             img_pil.save(save_path)
 
-
             return "Image uploaded"
         return "No image found"
-    
+
     def get_name_picture(self, label, directory):
         number = 1
         name = label + "." + str(number) + ".jpg"
         file_path = os.path.join(directory, name)
-        while(os.path.isfile(file_path)):
+        while (os.path.isfile(file_path)):
             number += 1
             name = label + "." + str(number) + ".jpg"
             file_path = os.path.join(directory, name)
         return name
-        
 
     def convolve(self):
         if self.kernel_name == None:
@@ -281,6 +279,7 @@ class PredictTab(QWidget):
                     f"{self.kernel_name} convolution with {self.n_layers} layers and maxpooling"
                 )
 
+
 class FeedBackWindow(QDialog):
     def __init__(self):
         super(FeedBackWindow, self).__init__()
@@ -292,7 +291,7 @@ class FeedBackWindow(QDialog):
         text = QLabel("Label the picture")
         list = QListWidget()
 
-        dir = ["cat","dog"]
+        dir = ["cat", "dog"]
         if len(dir) > 0:
             list.addItems([name for name in dir])
         else:
@@ -300,7 +299,6 @@ class FeedBackWindow(QDialog):
 
         mainLayout.addWidget(text)
         mainLayout.addWidget(list)
-
 
         self.select = QPushButton("Select")
         self.select.clicked.connect(lambda: self.ok_pressed(list.currentItem().text()))
@@ -313,24 +311,23 @@ class FeedBackWindow(QDialog):
         mainLayout.addWidget(hWidget)
 
         self.setLayout(mainLayout)
-    
+
     def checkCount(self, list):
         if list.count() == 0:
             list.addItems(["No label selected"])
             list.setEnabled(False)
             self.select.setEnabled(False)
             self.delete.setEnabled(False)
-    
+
     def cancel_pressed(self):
         self.reject()
-    
+
     def ok_pressed(self, selectedLabel):
         self.label = selectedLabel
         self.accept()
-    
+
     def get_selected_label(self):
         return self.label
-    
 
 
 class ModelWindow(QDialog):
@@ -372,14 +369,13 @@ class ModelWindow(QDialog):
         hLayout.setContentsMargins(0, 0, 0, 0)
         mainLayout.addWidget(hWidget)
         self.setLayout(mainLayout)
-    
+
     def checkCount(self, list):
         if list.count() == 0:
             list.addItems(["No models found"])
             list.setEnabled(False)
             self.select.setEnabled(False)
             self.delete.setEnabled(False)
-
 
     def getModel(self):
         return (self.name, self.model)

@@ -70,7 +70,7 @@ En résumé:
 ```bash
 usage: train.py [-h] [-f FOLDER]
 
-CNN Trainer for the Cat or Dog app.
+CNN Trainer for the cats or dogs app.
 
 optional arguments:
   -h, --help            show this help message and exit

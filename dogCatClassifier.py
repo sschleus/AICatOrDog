@@ -13,13 +13,16 @@ from tensorflow.keras.callbacks import ReduceLROnPlateau, EarlyStopping, ModelCh
 
 SAVE_DIR = "backup"
 
+if not os.path.exists(SAVE_DIR):
+    os.makedirs(SAVE_DIR)
+
 
 class DogCatClassifier:
     BATCH_SIZE = 128  # We increase the size of batches to improve training speed
     IMG_HEIGHT = 256
     IMG_WIDTH = 256
 
-    def __init__(self, data_dir="data", epochs=60):
+    def __init__(self, data_dir="data", epochs=1):
         self.epochs = epochs
         self.data_dir = data_dir
         self.X, self.y = self._load_data()
@@ -105,7 +108,7 @@ class DogCatClassifier:
         result = model.evaluate(test_set, batch_size=self.BATCH_SIZE)
         print("Testing set evaluation:", dict(zip(model.metrics_names, result)))
 
-        model.save_weights(os.path.join(SAVE_DIR, 'weights.h5'))
+        model.save_weights(os.path.join(SAVE_DIR, 'model.weights.h5'))
         model.save(os.path.join(SAVE_DIR, 'latest_model.keras'))
 
         self._plot(history)
