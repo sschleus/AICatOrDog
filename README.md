@@ -16,7 +16,7 @@ convolutionels (CNN), grace à la librairie tensorflow/keras.
 Téléchargez le dataset de microsoft disponible sur :
 https://www.microsoft.com/en-us/download/details.aspx?id=54765
 
-Et ajoutes les images de chiens dans le répetoire /data/dogs/ et les images de chats dans /data/cats/
+Et ajoutez les images de chiens dans le répetoire /data/dogs/ et les images de chats dans /data/cats/
 
 ## Installation
 Ce projet utilise la librairie tensorflow et peut nécéssiter un GPU (une carte
