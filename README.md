@@ -18,6 +18,8 @@ https://www.microsoft.com/en-us/download/details.aspx?id=54765
 
 Et ajoutez les images de chiens dans le répetoire /data/dogs/ et les images de chats dans /data/cats/
 
+N'oubliez pas de Unzip le fichier model_LatestCNN.zip pour utiliser le modèle avec une accuracy élevé.
+
 ## Installation
 Ce projet utilise la librairie tensorflow et peut nécéssiter un GPU (une carte
 graphique dédiée) pour fonctionner correctement.
