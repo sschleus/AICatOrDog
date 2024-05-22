@@ -7,6 +7,17 @@ si une image contient un chien ou un chat.
 Ce programme utilise le deep learning et notamment les réseaux de neurones
 convolutionels (CNN), grace à la librairie tensorflow/keras.
 
+## Configuration utilisée pour ce projet
+- I9-10900K
+- 32GB de RAM
+- RTX 2070 SUPER
+
+## Pré-requis
+Téléchargez le dataset de microsoft disponible sur :
+https://www.microsoft.com/en-us/download/details.aspx?id=54765
+
+Et ajoutes les images de chiens dans le répetoire /data/dogs/ et les images de chats dans /data/cats/
+
 ## Installation
 Ce projet utilise la librairie tensorflow et peut nécéssiter un GPU (une carte
 graphique dédiée) pour fonctionner correctement.
